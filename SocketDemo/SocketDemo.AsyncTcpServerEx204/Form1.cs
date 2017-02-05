@@ -70,7 +70,7 @@ namespace SocketDemo.AsyncTcpServerEx204
         private void btnStart_Click(object sender, EventArgs e)
         {
             if (isStart) return;
-            IPEndPoint localEP = new IPEndPoint(Dns.GetHostAddresses(Dns.GetHostName())[0], 9009);
+            IPEndPoint localEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9009);
             listener = new TcpListener(localEP);
             listener.Start(20);
             StartListening();
@@ -205,6 +205,11 @@ namespace SocketDemo.AsyncTcpServerEx204
                 return;
             }
             SendData(clientList.ElementAt(comboBoxClient.SelectedIndex), txtSendMsg.Text);
+        }
+
+        private void btnClear_Click(object sender, EventArgs e)
+        {
+            this.lstBoxStatu.Items.Clear();
         }
     }
 }

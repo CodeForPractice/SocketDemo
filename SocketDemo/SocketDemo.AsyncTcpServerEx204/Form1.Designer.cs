@@ -69,6 +69,7 @@
             this.btnClear.TabIndex = 2;
             this.btnClear.Text = "清空";
             this.btnClear.UseVisualStyleBackColor = true;
+            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             // 
             // lstBoxStatu
             // 

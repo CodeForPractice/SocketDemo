@@ -37,7 +37,7 @@ namespace SocketDemo.AsyncTcpServerEx204
         {
             if (_clientSocket != null)
             {
-                return $"{_clientSocket.LocalEndPoint.ToString()}";
+                return $"{_clientSocket.RemoteEndPoint.ToString()}";
             }
             return string.Empty;
         }
