@@ -59,10 +59,13 @@ namespace SocketDemo.AsyncTcpClientEx205
         {
             try
             {
-                int i = client.EndReceive(ar);
-                string data = $"收：{Encoding.UTF8.GetString(rcvBuffer, 0, i)}";
-                lstBoxMsg.Invoke(appendDel, data);
-                SetRcvCallback();
+                if (client != null)
+                {
+                    int i = client.EndReceive(ar);
+                    string data = $"收：{client.RemoteEndPoint.ToString()}:{Encoding.UTF8.GetString(rcvBuffer, 0, i)}";
+                    lstBoxMsg.Invoke(appendDel, data);
+                    SetRcvCallback();
+                }
             }
             catch (Exception ex)
             {

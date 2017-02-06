@@ -10,7 +10,7 @@ namespace SocketDemo.AsyncTcpServerEx204
 {
     public partial class Form1 : Form
     {
-        private ConcurrentBag<ClientSocket> clientList = new ConcurrentBag<ClientSocket>();//客户端链接列表
+        private ConcurrentDictionary<Guid,ClientSocket> clientList = new ConcurrentDictionary<Guid,ClientSocket>();//客户端链接列表
         private bool isStart = false;//是否启动监听
         private TcpListener listener;
 
@@ -42,21 +42,25 @@ namespace SocketDemo.AsyncTcpServerEx204
         {
             if (client != null)
             {
-                clientList.Add(client);
+                clientList.TryAdd(client.Id,client);
                 comboBoxClient.Items.Add(client.GetAddrInfo());
             }
         }
 
         private void ClientShutDown(ClientSocket client)
         {
-            if (client != null)
+            if (client != null && client.Client != null)
             {
-                clientList.TryTake(out client);
+                clientList.TryRemove(client.Id, out client);
                 if (client != null)
                 {
                     comboBoxClient.Items.Remove(client.GetAddrInfo());
                     client.Dispose();
                 }
+            }
+            else
+            {
+                lstBoxStatu.Invoke(appendMsg, "执行为空操作");
             }
         }
 
@@ -153,6 +157,7 @@ namespace SocketDemo.AsyncTcpServerEx204
         {
             if (!isStart) return;
             listener.Stop();
+            
             isStart = false;
             lstBoxStatu.Invoke(appendMsg, "已经结束服务器的监听");
             btnStart.Enabled = true;
@@ -204,7 +209,7 @@ namespace SocketDemo.AsyncTcpServerEx204
                 MessageBox.Show("请选择发送客户");
                 return;
             }
-            SendData(clientList.ElementAt(comboBoxClient.SelectedIndex), txtSendMsg.Text);
+            SendData(clientList.ElementAt(comboBoxClient.SelectedIndex).Value, txtSendMsg.Text);
             txtSendMsg.Text = "";
         }
 

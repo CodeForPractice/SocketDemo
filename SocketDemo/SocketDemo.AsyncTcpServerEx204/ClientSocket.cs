@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System;
+using System.Net.Sockets;
 
 namespace SocketDemo.AsyncTcpServerEx204
 {
@@ -9,10 +10,12 @@ namespace SocketDemo.AsyncTcpServerEx204
     {
         private Socket _clientSocket;
         private byte[] _rcvBuffer;
+        private Guid _id;
 
         public ClientSocket(Socket clientSocket)
         {
             _clientSocket = clientSocket;
+            _id = Guid.NewGuid();
         }
 
         public Socket Client
@@ -26,6 +29,11 @@ namespace SocketDemo.AsyncTcpServerEx204
             {
                 return _rcvBuffer;
             }
+        }
+
+        public Guid Id
+        {
+            get { return _id; }
         }
 
         public void ClearBuffer()
