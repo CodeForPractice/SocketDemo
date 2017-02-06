@@ -205,6 +205,7 @@ namespace SocketDemo.AsyncTcpServerEx204
                 return;
             }
             SendData(clientList.ElementAt(comboBoxClient.SelectedIndex), txtSendMsg.Text);
+            txtSendMsg.Text = "";
         }
 
         private void btnClear_Click(object sender, EventArgs e)

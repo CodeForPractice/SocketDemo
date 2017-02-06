@@ -141,6 +141,7 @@ namespace SocketDemo.AsyncTcpClientEx205
                 return;
             }
             sendStr = txtSendMsg.Text.Trim();
+            txtSendMsg.Text = "";
             SendData();
         }
 
