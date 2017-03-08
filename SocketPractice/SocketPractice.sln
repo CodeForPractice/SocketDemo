@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketPractice", "SocketPractice\SocketPractice.csproj", "{CD295508-78C7-4DF5-977C-02271D6637DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketPractice.Infrastructure", "SocketPractice.Infrastructure\SocketPractice.Infrastructure.csproj", "{6EDDDDB0-6979-4B37-8C1C-8172BF35AF8D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CD295508-78C7-4DF5-977C-02271D6637DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD295508-78C7-4DF5-977C-02271D6637DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD295508-78C7-4DF5-977C-02271D6637DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD295508-78C7-4DF5-977C-02271D6637DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EDDDDB0-6979-4B37-8C1C-8172BF35AF8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EDDDDB0-6979-4B37-8C1C-8172BF35AF8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EDDDDB0-6979-4B37-8C1C-8172BF35AF8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EDDDDB0-6979-4B37-8C1C-8172BF35AF8D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
