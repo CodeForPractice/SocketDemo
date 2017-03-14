@@ -15,9 +15,7 @@ namespace SocketPratice.Client
 {
     public sealed class AsyncUserToken : IDisposable
     {
-        public Socket ServiceSocket { get; set; }
-
-        public IPAddress IPAddress { get; set; }
+        public Socket ClientSocket { get; set; }
 
         public EndPoint Remote { get; set; }
 
@@ -27,19 +25,18 @@ namespace SocketPratice.Client
 
         public int NextReceiveOffset { get; set; }
 
-        public AsyncUserToken(SocketAsyncEventArgs serviceAsyncEvent)
+        public AsyncUserToken(Socket serviceSocket)
         {
-            ServiceSocket = serviceAsyncEvent.AcceptSocket;
-            Remote = serviceAsyncEvent.RemoteEndPoint;
-            IPAddress = ((IPEndPoint)serviceAsyncEvent.RemoteEndPoint).Address;
+            ClientSocket = serviceSocket;
+            Remote = serviceSocket.RemoteEndPoint;
         }
 
         public void Dispose()
         {
             try
             {
-                this.ServiceSocket.Shutdown(SocketShutdown.Send);
-                this.ServiceSocket.Close();
+                this.ClientSocket.Shutdown(SocketShutdown.Send);
+                this.ClientSocket.Close();
             }
             catch
             {
