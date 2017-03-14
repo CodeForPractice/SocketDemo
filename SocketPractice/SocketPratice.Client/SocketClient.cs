@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -29,19 +30,29 @@ namespace SocketPratice.Client
         private bool _isConnected = false;
         private IPEndPoint _hostEndPoint;
 
+        private SocketAsyncEventArgs _sendEventArgs;
         private SocketAsyncEventArgs _receiveEventArgs;
 
+        private AutoResetEvent _sendRestEvent;
+        private BlockingCollection<byte[]> messageBag = new BlockingCollection<byte[]>();
 
         public SocketClient(IPEndPoint hostEndPoint)
         {
             _hostEndPoint = hostEndPoint;
             _clientSocket = new Socket(hostEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            _sendRestEvent = new AutoResetEvent(false);
 
             _receiveEventArgs = new SocketAsyncEventArgs();
             _receiveEventArgs.UserToken = new AsyncUserToken(_clientSocket);
             _receiveEventArgs.RemoteEndPoint = _hostEndPoint;
             _receiveEventArgs.SetBuffer(new byte[_bufferSize], 0, _bufferSize);
             _receiveEventArgs.Completed += OnReceive;
+
+            _sendEventArgs = new SocketAsyncEventArgs();
+            _sendEventArgs.UserToken = _clientSocket;
+            _sendEventArgs.RemoteEndPoint = _hostEndPoint;
+            _sendEventArgs.Completed += OnSend;
+
         }
 
 
@@ -67,6 +78,42 @@ namespace SocketPratice.Client
         private void OnConneted(object sender, SocketAsyncEventArgs e)
         {
             ProcessOnConnected(e);
+        }
+
+        private void OnSend(object sender, SocketAsyncEventArgs e)
+        {
+            ProcessSended();
+        }
+
+        private void ProcessSended()
+        {
+            _sendRestEvent.Set();
+        }
+
+        public void SendMessage(byte[] messageData)
+        {
+            messageBag.Add(messageData);
+            SendMessage();
+        }
+
+        private void SendMessage()
+        {
+            Task.Factory.StartNew(() =>
+            {
+                while (true)
+                {
+                    var messageData = messageBag.Take();
+                    if (messageData != null)
+                    {
+                        _sendEventArgs.SetBuffer(messageData, 0, messageData.Length);
+                        if (!_clientSocket.SendAsync(_sendEventArgs))
+                        {
+                            ProcessSended();
+                        }
+                    }
+                    _sendRestEvent.WaitOne();
+                }
+            });
 
         }
 

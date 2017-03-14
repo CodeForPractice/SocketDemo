@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketDemo.AsyncTcpServerEx
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketDemo.AsyncTcpClientEx205", "SocketDemo.AsyncTcpClientEx205\SocketDemo.AsyncTcpClientEx205.csproj", "{EBE0B739-2278-49A5-B42B-194D796BF22A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketDemo.Sniffer", "SocketDemo.Sniffer\SocketDemo.Sniffer.csproj", "{04564EBF-BB5A-4BA7-B757-FFA923DCF879}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{EBE0B739-2278-49A5-B42B-194D796BF22A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EBE0B739-2278-49A5-B42B-194D796BF22A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EBE0B739-2278-49A5-B42B-194D796BF22A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04564EBF-BB5A-4BA7-B757-FFA923DCF879}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04564EBF-BB5A-4BA7-B757-FFA923DCF879}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04564EBF-BB5A-4BA7-B757-FFA923DCF879}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04564EBF-BB5A-4BA7-B757-FFA923DCF879}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
