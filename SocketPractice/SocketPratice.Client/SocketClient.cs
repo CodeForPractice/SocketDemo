@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SocketPractice.Infrastructure;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,16 +31,24 @@ namespace SocketPratice.Client
         private bool _isConnected = false;
         private IPEndPoint _hostEndPoint;
 
+        private ManualResetEvent _connectRestEvent;
+
         private SocketAsyncEventArgs _sendEventArgs;
         private SocketAsyncEventArgs _receiveEventArgs;
 
         private AutoResetEvent _sendRestEvent;
-        private BlockingCollection<byte[]> messageBag = new BlockingCollection<byte[]>();
+        private ConcurrentQueue<byte[]> messageBag = new ConcurrentQueue<byte[]>();
+
+        private int _sending = 0;
+
+
 
         public SocketClient(IPEndPoint hostEndPoint)
         {
             _hostEndPoint = hostEndPoint;
             _clientSocket = new Socket(hostEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+            _connectRestEvent = new ManualResetEvent(false);
             _sendRestEvent = new AutoResetEvent(false);
 
             _receiveEventArgs = new SocketAsyncEventArgs();
@@ -68,6 +77,13 @@ namespace SocketPratice.Client
                 ProcessOnConnected(connectArgs);
             }
 
+            Task.Factory.StartNew(() =>
+            {
+                SendMessage();
+            });
+
+            _connectRestEvent.WaitOne();
+
             if (!_clientSocket.ReceiveAsync(_receiveEventArgs))
             {
                 ProcessReceive(_receiveEventArgs);
@@ -82,39 +98,80 @@ namespace SocketPratice.Client
 
         private void OnSend(object sender, SocketAsyncEventArgs e)
         {
-            ProcessSended();
+            _sendRestEvent.Set();
         }
 
         private void ProcessSended()
         {
-            _sendRestEvent.Set();
+            LogUtil.Debug("调用处理ProcessSended");
+            SendMessage();
         }
 
         public void SendMessage(byte[] messageData)
         {
-            messageBag.Add(messageData);
-            SendMessage();
+            messageBag.Enqueue(messageData);
+            //_sendRestEvent.Set();
         }
 
         private void SendMessage()
         {
-            Task.Factory.StartNew(() =>
+            while (true)
             {
-                while (true)
+                DealSendMessage();
+            }
+
+        }
+
+        private void DealSendMessage()
+        {
+            try
+            {
+                while (!messageBag.IsEmpty)
                 {
-                    var messageData = messageBag.Take();
-                    if (messageData != null)
+                    byte[] messageData = null;
+                    if (messageBag.TryDequeue(out messageData))
                     {
-                        _sendEventArgs.SetBuffer(messageData, 0, messageData.Length);
-                        if (!_clientSocket.SendAsync(_sendEventArgs))
+                        if (messageData != null)
                         {
-                            ProcessSended();
+                            _sendEventArgs.SetBuffer(messageData, 0, messageData.Length);
+                            if (!_clientSocket.SendAsync(_sendEventArgs))
+                            {
+                                ProcessSended();
+                            }
+                            _sendRestEvent.WaitOne();
                         }
                     }
-                    _sendRestEvent.WaitOne();
                 }
-            });
+            }
+            catch (Exception ex)
+            {
+                LogUtil.Error("异常:" + ex.ToString());
+                // ExistSending();
+            }
+        }
 
+        private bool EnterSending()
+        {
+            Guid guid = Guid.NewGuid();
+            LogUtil.Debug(guid + "尝试进入发送");
+            if (Interlocked.CompareExchange(ref _sending, 1, 0) == 0)
+            {
+                LogUtil.Debug(guid + "进入发送成功");
+                return true;
+            }
+            else
+            {
+                LogUtil.Warn(guid + "进入发送失败");
+                return false;
+            }
+        }
+
+        private void ExistSending()
+        {
+            Guid guid = Guid.NewGuid();
+            LogUtil.Debug(guid + "退出发送");
+            Interlocked.Exchange(ref _sending, 0);
+            LogUtil.Debug(guid + "退出发送成功");
         }
 
         private void ProcessOnConnected(SocketAsyncEventArgs e)
@@ -129,6 +186,8 @@ namespace SocketPratice.Client
                 Console.WriteLine("连接失败");
                 throw new Exception("连接失败");
             }
+
+            _connectRestEvent.Set();
         }
         public void OnReceive(object sender, SocketAsyncEventArgs e)
         {
@@ -171,6 +230,10 @@ namespace SocketPratice.Client
                     ProcessReceive(e);
                 }
             }
+            else
+            {
+                _clientSocket.Close();
+            }
         }
 
         private void ProcessReceiveData(int dataStartOffset, int totalReceivedSize, int alreadyProcessDataSize, AsyncUserToken userToken, SocketAsyncEventArgs e)
@@ -209,15 +272,15 @@ namespace SocketPratice.Client
 
         private void ProcessMessage(byte[] messageData)
         {
-            Task.Factory.StartNew(() =>
-            {
+            //Task.Factory.StartNew(() =>
+            //{
 
                 int current = Interlocked.Increment(ref _totalReceivedCount);
                 if (messageData != null)
                 {
                     Console.WriteLine($"接收时间{DateTime.Now.ToString("yyyyMMddHHmmsss")},当前是第{current.ToString()}条信息,信息内容{Encoding.UTF8.GetString(messageData)}");
                 }
-            });
+            //});
         }
 
     }
