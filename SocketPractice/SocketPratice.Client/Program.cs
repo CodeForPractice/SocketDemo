@@ -12,7 +12,7 @@ namespace SocketPratice.Client
     {
         static void Main(string[] args)
         {
-            SocketClient clientSocket = new SocketClient(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9900));
+            ClientSocket clientSocket = new ClientSocket(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9900));
             clientSocket.Connect();
 
             Parallel.For(0, 2, i =>
