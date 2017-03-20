@@ -66,7 +66,7 @@ namespace SocketPratice.Client
         private void SendMessage()
         {
             //判断当前是否正在发送，是就不用进行调用发送方法
-            if (!EnteringSend()) return;
+            //if (!EnteringSend()) return;
 
             while (!_sendMessageQueue.IsEmpty)
             {
@@ -76,6 +76,7 @@ namespace SocketPratice.Client
                 {
                     if (messageBytes != null)
                     {
+                        _sendArgs.SetBuffer(messageBytes, 0, messageBytes.Length);
                         if (!_clientSocket.SendAsync(_sendArgs))
                         {
                             ProcessSend(_sendArgs);
