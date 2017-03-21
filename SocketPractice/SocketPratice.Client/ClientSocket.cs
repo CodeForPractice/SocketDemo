@@ -26,6 +26,8 @@ namespace SocketPratice.Client
         private int _sending = 0;
         private ConcurrentQueue<byte[]> _sendMessageQueue = new ConcurrentQueue<byte[]>();
 
+        private ConcurrentStack<SocketAsyncEventArgs> _sendEventArgsList = new ConcurrentStack<SocketAsyncEventArgs>();
+
         public ClientSocket(IPEndPoint hostPoint)
         {
             _hostPoint = hostPoint;
@@ -42,6 +44,15 @@ namespace SocketPratice.Client
             _sendArgs.UserToken = _clientSocket;
             _sendArgs.RemoteEndPoint = _hostPoint;
             _sendArgs.Completed += SendArgs_Completed;
+
+            for (int i = 0; i < 50; i++)
+            {
+                SocketAsyncEventArgs sendArgs = new SocketAsyncEventArgs();
+                sendArgs.UserToken = _clientSocket;
+                sendArgs.RemoteEndPoint = _hostPoint;
+                sendArgs.Completed += SendArgs_Completed;
+                _sendEventArgsList.Push(sendArgs);
+            }
         }
 
         private void SendArgs_Completed(object sender, SocketAsyncEventArgs e)
@@ -53,38 +64,56 @@ namespace SocketPratice.Client
         {
             long currentSendCount = Interlocked.Increment(ref _SendedCount);
             LogUtil.Debug($"当前发送了{currentSendCount.ToString()}条信息");
-            ExistSend();
+            if (e == _sendArgs)
+            {
+                ExistSend();
+            }
+            else
+            {
+                _sendEventArgsList.Push(e);
+            }
             SendMessage();
         }
         public void SendMessage(byte[] messageData)
         {
             if (messageData == null || messageData.Length == 0) return;
             _sendMessageQueue.Enqueue(messageData);
-            Task.Factory.StartNew(() => { SendMessage(); });
+            SendMessage();
         }
 
         private void SendMessage()
         {
-            //判断当前是否正在发送，是就不用进行调用发送方法
-            //if (!EnteringSend()) return;
 
-            while (!_sendMessageQueue.IsEmpty)
+            if (!_sendMessageQueue.IsEmpty)
             {
-                if (!EnteringSend()) break;
-                byte[] messageBytes = null;
-                if (_sendMessageQueue.TryDequeue(out messageBytes))
+                SocketAsyncEventArgs sendEventArg = null;
+                if (_sendEventArgsList.TryPop(out sendEventArg))
                 {
-                    if (messageBytes != null)
+                    LogUtil.Warn("采用缓冲发送对象发送");
+                    SendMessage(sendEventArg);
+                }
+                else if (EnteringSend())
+                {
+                    SendMessage(_sendArgs);
+                }
+            }
+        }
+        private void SendMessage(SocketAsyncEventArgs e)
+        {
+            byte[] messageBytes = null;
+            if (_sendMessageQueue.TryDequeue(out messageBytes))
+            {
+                if (messageBytes != null)
+                {
+                    e.SetBuffer(messageBytes, 0, messageBytes.Length);
+                    if (!_clientSocket.SendAsync(e))
                     {
-                        _sendArgs.SetBuffer(messageBytes, 0, messageBytes.Length);
-                        if (!_clientSocket.SendAsync(_sendArgs))
-                        {
-                            ProcessSend(_sendArgs);
-                        }
+                        ProcessSend(_sendArgs);
                     }
                 }
             }
         }
+
 
         private bool EnteringSend()
         {
