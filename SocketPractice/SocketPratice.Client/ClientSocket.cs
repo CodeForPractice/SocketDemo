@@ -117,7 +117,7 @@ namespace SocketPratice.Client
             if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
             {
                 AsyncUserToken userToken = e.UserToken as AsyncUserToken;
-                DealReceivedData(e, userToken);
+                DealReceivedData(e, userToken, userToken.DataStartOffset, 0, userToken.NextReceiveOffset - userToken.DataStartOffset + e.BytesTransferred);
                 userToken.NextReceiveOffset += e.BytesTransferred;
                 if (userToken.NextReceiveOffset == e.Buffer.Length)//如果到达缓冲区尾部
                 {
@@ -130,7 +130,7 @@ namespace SocketPratice.Client
                     userToken.NextReceiveOffset = notDealSize;
                 }
 
-                e.SetBuffer(userToken.NextReceiveOffset, e.Buffer.Length - userToken.DataStartOffset);
+                e.SetBuffer(userToken.NextReceiveOffset, e.Buffer.Length - userToken.NextReceiveOffset);
 
                 if (!userToken.ClientSocket.ReceiveAsync(e))
                 {
@@ -143,30 +143,34 @@ namespace SocketPratice.Client
             }
         }
 
-        private void DealReceivedData(SocketAsyncEventArgs e, AsyncUserToken userToken)
+        private void DealReceivedData(SocketAsyncEventArgs e, AsyncUserToken userToken, int dataStartOffset, int dealedSize, int totalReceivedSize)
         {
+            if (dealedSize >= totalReceivedSize)
+            {
+                return;
+            }
             if (userToken.MessageSize == null)
             {
-                if (e.BytesTransferred > _HeaderLength)
+                if (totalReceivedSize > _HeaderLength)
                 {
                     var messageData = new byte[_HeaderLength];
-                    Buffer.BlockCopy(e.Buffer, 0, messageData, 0, _HeaderLength);
+                    Buffer.BlockCopy(e.Buffer, dataStartOffset, messageData, 0, _HeaderLength);
                     userToken.MessageSize = BitConverter.ToInt32(messageData, 0);
-                    userToken.DataStartOffset = _HeaderLength;
-                    DealReceivedData(e, userToken);
+                    userToken.DataStartOffset = dataStartOffset + _HeaderLength;
+                    DealReceivedData(e, userToken, userToken.DataStartOffset, dealedSize + _HeaderLength, totalReceivedSize);
                 }
             }
             else
             {
                 int bodyMessageSize = userToken.MessageSize.Value;
-                if (e.BytesTransferred >= userToken.DataStartOffset + bodyMessageSize)
+                if (totalReceivedSize >= dealedSize + bodyMessageSize)
                 {
                     var messageData = new byte[bodyMessageSize];
-                    Buffer.BlockCopy(e.Buffer, userToken.DataStartOffset, messageData, 0, bodyMessageSize);
+                    Buffer.BlockCopy(e.Buffer, dataStartOffset, messageData, 0, bodyMessageSize);
                     ProcessMessage(messageData);
-                    userToken.DataStartOffset += bodyMessageSize;
+                    userToken.DataStartOffset = dataStartOffset + bodyMessageSize;
                     userToken.MessageSize = null;
-                    DealReceivedData(e, userToken);
+                    DealReceivedData(e, userToken, userToken.DataStartOffset, dealedSize + bodyMessageSize, totalReceivedSize);
                 }
             }
         }

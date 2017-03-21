@@ -15,7 +15,7 @@ namespace SocketPratice.Client
             ClientSocket clientSocket = new ClientSocket(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9900));
             clientSocket.Connect();
 
-            Parallel.For(0, 2, i =>
+            Parallel.For(0, 50000, i =>
             {
                 string message = $"你好！{i.ToString()}";
                 var dataByte = Encoding.UTF8.GetBytes(message);
@@ -26,16 +26,16 @@ namespace SocketPratice.Client
                 clientSocket.SendMessage(messageByte);
             });
             LogUtil.Info("发送完成");
-            for (int i = 0; i < 100; i++)
-            {
-                string message = $"你好！{i.ToString()}";
-                var dataByte = Encoding.UTF8.GetBytes(message);
-                var headerByte = BitConverter.GetBytes(dataByte.Length);
-                var messageByte = new byte[headerByte.Length + dataByte.Length];
-                headerByte.CopyTo(messageByte, 0);
-                dataByte.CopyTo(messageByte, headerByte.Length);
-                clientSocket.SendMessage(messageByte);
-            }
+            //for (int i = 0; i < 100; i++)
+            //{
+            //    string message = $"你好！{i.ToString()}";
+            //    var dataByte = Encoding.UTF8.GetBytes(message);
+            //    var headerByte = BitConverter.GetBytes(dataByte.Length);
+            //    var messageByte = new byte[headerByte.Length + dataByte.Length];
+            //    headerByte.CopyTo(messageByte, 0);
+            //    dataByte.CopyTo(messageByte, headerByte.Length);
+            //    clientSocket.SendMessage(messageByte);
+            //}
 
             Console.ReadLine();
         }
