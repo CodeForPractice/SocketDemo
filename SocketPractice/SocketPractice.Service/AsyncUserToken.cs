@@ -43,4 +43,11 @@ namespace SocketPractice.Service
             }
         }
     }
+
+    public sealed class MessageData
+    {
+        public AsyncUserToken UserToken { get; set; }
+
+        public byte[] Data { get; set; }
+    }
 }
