@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketPractice.Infrastructu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketPratice.Client", "SocketPratice.Client\SocketPratice.Client.csproj", "{09A8C1B7-B785-4F06-8127-A57943606CAC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketPractice.Service", "SocketPractice.Service\SocketPractice.Service.csproj", "{CA61116F-A7FB-4A47-AEF8-FECD5CF4D5DA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{09A8C1B7-B785-4F06-8127-A57943606CAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{09A8C1B7-B785-4F06-8127-A57943606CAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{09A8C1B7-B785-4F06-8127-A57943606CAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA61116F-A7FB-4A47-AEF8-FECD5CF4D5DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA61116F-A7FB-4A47-AEF8-FECD5CF4D5DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA61116F-A7FB-4A47-AEF8-FECD5CF4D5DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA61116F-A7FB-4A47-AEF8-FECD5CF4D5DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
