@@ -74,14 +74,15 @@ namespace SocketPractice.Service
                 if (e.SocketError == SocketError.Success)
                 {
                     LogUtil.Debug($"{e.AcceptSocket.RemoteEndPoint}已连接");
-                    SocketAsyncEventArgs receiveEventArgs = new SocketAsyncEventArgs();
-                    receiveEventArgs.UserToken = new AsyncUserToken(e.AcceptSocket);
-                    receiveEventArgs.Completed += OnIOCompleted;
-                    receiveEventArgs.SetBuffer(new byte[_bufferSize], 0, _bufferSize);
-                    if (!e.AcceptSocket.ReceiveAsync(receiveEventArgs))
-                    {
-                        ProcessReceived(receiveEventArgs);
-                    }
+                    TcpConnection tcpConnection = new TcpConnection(e.AcceptSocket);
+                    //SocketAsyncEventArgs receiveEventArgs = new SocketAsyncEventArgs();
+                    //receiveEventArgs.UserToken = new AsyncUserToken(e.AcceptSocket);
+                    //receiveEventArgs.Completed += OnIOCompleted;
+                    //receiveEventArgs.SetBuffer(new byte[_bufferSize], 0, _bufferSize);
+                    //if (!e.AcceptSocket.ReceiveAsync(receiveEventArgs))
+                    //{
+                    //    ProcessReceived(receiveEventArgs);
+                    //}
                 }
                 else
                 {

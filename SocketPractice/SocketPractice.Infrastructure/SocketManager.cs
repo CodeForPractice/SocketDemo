@@ -275,7 +275,7 @@ namespace SocketPractice.Infrastructure
                     Array.Copy(e.Buffer, e.Offset, data, 0, e.BytesTransferred);
                     lock (token.Buffer)
                     {
-                        token.Buffer.AddRange(data);
+                        //token.Buffer.AddRange(data);
                     }
                     //注意:你一定会问,这里为什么要用do-while循环?
                     //如果当客户发送大数据流的时候,e.BytesTransferred的大小就会比客户端发送过来的要小,
@@ -286,23 +286,23 @@ namespace SocketPractice.Infrastructure
                     do
                     {
                         //判断包的长度
-                        byte[] lenBytes = token.Buffer.GetRange(0, 4).ToArray();
-                        int packageLen = BitConverter.ToInt32(lenBytes, 0);
-                        if (packageLen > token.Buffer.Count - 4)
-                        {   //长度不够时,退出循环,让程序继续接收
-                            break;
-                        }
+                        //byte[] lenBytes = token.Buffer.GetRange(0, 4).ToArray();
+                        //int packageLen = BitConverter.ToInt32(lenBytes, 0);
+                        //if (packageLen > token.Buffer.Count - 4)
+                        //{   //长度不够时,退出循环,让程序继续接收
+                        //    break;
+                        //}
 
                         //包够长时,则提取出来,交给后面的程序去处理
-                        byte[] rev = token.Buffer.GetRange(4, packageLen).ToArray();
+                        //byte[] rev = token.Buffer.GetRange(4, packageLen).ToArray();
                         //从数据池中移除这组数据
-                        lock (token.Buffer)
-                        {
-                            token.Buffer.RemoveRange(0, packageLen + 4);
-                        }
+                        //lock (token.Buffer)
+                        //{
+                        //    token.Buffer.RemoveRange(0, packageLen + 4);
+                        //}
                         //将数据包交给后台处理,这里你也可以新开个线程来处理.加快速度.
-                        if (ReceiveClientData != null)
-                            ReceiveClientData(token, rev);
+                        //if (ReceiveClientData != null)
+                        //    ReceiveClientData(token, rev);
                         //这里API处理完后,并没有返回结果,当然结果是要返回的,却不是在这里, 这里的代码只管接收.
                         //若要返回结果,可在API处理中调用此类对象的SendMessage方法,统一打包发送.不要被微软的示例给迷惑了.
                     } while (token.Buffer.Count > 4);

@@ -40,6 +40,9 @@ namespace SocketPractice.Infrastructure
         private int _isSending = 0;
         private int _isClosed = 0;
         private int isParsing = 0;
+        private int _isReceiving = 0;
+
+        private MemoryStream receivedStream = new MemoryStream();
 
         public TcpConnection(Socket socket)
         {
@@ -56,6 +59,7 @@ namespace SocketPractice.Infrastructure
             _sendEventArgs = new SocketAsyncEventArgs();
             _sendEventArgs.AcceptSocket = _socket;
             _sendEventArgs.Completed += OnIOCompleted;
+            TryReceived();
         }
 
         public Socket Socket { get { return _socket; } }
@@ -86,23 +90,102 @@ namespace SocketPractice.Infrastructure
             TrySend();
         }
 
+        private void TryReceived()
+        {
+            if (EnteringReceive())
+            {
+                Console.WriteLine("=========");
+                _receivedEventArgs.SetBuffer(new byte[BUFFER_SIZE], 0, BUFFER_SIZE);
+                if (!_receivedEventArgs.AcceptSocket.ReceiveAsync(_receivedEventArgs))
+                {
+                    ProcessReceived(_receivedEventArgs);
+                }
+            }
+        }
+
+        private bool EnteringReceive()
+        {
+            return Interlocked.CompareExchange(ref _isReceiving, 1, 0) == 0;
+        }
+
+        private void ExistReceive()
+        {
+            Interlocked.Exchange(ref _isReceiving, 0);
+        }
+
         private void ProcessReceived(SocketAsyncEventArgs e)
         {
             if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
             {
-
+                AsyncUserToken userToken = e.UserToken as AsyncUserToken;
+                var messageData = new byte[e.BytesTransferred];
+                Buffer.BlockCopy(e.Buffer, 0, messageData, 0, e.BytesTransferred);
+                userToken.AddBuffer(messageData);
+                TryParsing(userToken);
+                ExistReceive();
+                TryReceived();
             }
             else
             {
                 Close();
             }
         }
-        private void TryParsing()
+        private static int _HeaderSize = 4;
+        private int _parsedHeaderSize = 0;
+        private int _parsedBodySize = 0;
+        private int _parsedIndex = 0;
+        private byte[] _package;
+
+        private void TryParsing(AsyncUserToken userToken)
         {
             if (_isClosed == 1) return;
             if (EnterParsing())
             {
-
+                Console.WriteLine("进入解析");
+                byte[] messageData = null;
+                while (!userToken.Buffer.IsEmpty)
+                {
+                    if (userToken.Buffer.TryDequeue(out messageData))
+                    {
+                        receivedStream.Write(messageData, 0, messageData.Length);
+                    }
+                }
+                if (receivedStream.Length == 0)
+                {
+                    ExistParsing();
+                    TryParsing(userToken);
+                }
+                var messageByte = receivedStream.ToArray();
+                for (int i = 0; i < messageByte.Length; i++)
+                {
+                    if (_parsedHeaderSize < _HeaderSize)
+                    {
+                        _parsedBodySize |= (messageByte[i] << (_parsedHeaderSize * 8));// little-endian order
+                        _parsedHeaderSize++;
+                        if (_parsedHeaderSize == _HeaderSize)
+                        {
+                            _package = new byte[_parsedBodySize];
+                        }
+                    }
+                    else
+                    {
+                        //获取需要拷贝的长度
+                        int needCopyLength = Math.Min(_parsedBodySize - _parsedIndex, messageByte.Length - i);
+                        Buffer.BlockCopy(messageByte, i, _package, _parsedIndex, needCopyLength);
+                        _parsedIndex += needCopyLength;
+                        i += needCopyLength - 1;
+                        if (_parsedIndex == _parsedBodySize)
+                        {
+                            Console.WriteLine("接收到:" + Encoding.UTF8.GetString(_package));
+                            SendMessage(BuilderData(_package));
+                            _parsedHeaderSize = 0;
+                            _parsedBodySize = 0;
+                            _parsedIndex = 0;
+                            _package = null;
+                        }
+                    }
+                }
+                ExistParsing();
             }
         }
 
@@ -153,7 +236,7 @@ namespace SocketPractice.Infrastructure
                 }
                 try
                 {
-                    var data = _sendStream.GetBuffer();
+                    var data = _sendStream.ToArray();
                     _sendEventArgs.SetBuffer(data, 0, data.Length);
                     if (!_sendEventArgs.AcceptSocket.SendAsync(_sendEventArgs))
                     {
@@ -206,6 +289,17 @@ namespace SocketPractice.Infrastructure
                 SocketUtil.ShutDown(_socket);
                 LogUtil.Debug($"完成关闭{_localPoint}与{_remoteEndPoint}的连接");
             }
+        }
+
+        private byte[] BuilderData(byte[] data)
+        {
+            if (data == null || data.Length <= 0) return null;
+            int dataLength = data.Length;
+            byte[] messageData = new byte[dataLength + _HeaderSize];
+            var header = BitConverter.GetBytes(dataLength);
+            header.CopyTo(messageData, 0);
+            data.CopyTo(messageData, _HeaderSize);
+            return messageData;
         }
     }
 }

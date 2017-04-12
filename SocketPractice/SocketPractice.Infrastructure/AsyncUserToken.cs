@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -16,6 +17,7 @@ namespace SocketPractice.Infrastructure
 {
     public sealed class AsyncUserToken
     {
+        private ConcurrentQueue<byte[]> _buffer;
         /// <summary>
         /// 客户端IP地址
         /// </summary>
@@ -44,11 +46,17 @@ namespace SocketPractice.Infrastructure
         /// <summary>
         /// 数据缓存区
         /// </summary>
-        public List<byte> Buffer { get; set; }
+        public ConcurrentQueue<byte[]> Buffer { get { return _buffer; } }
 
         public AsyncUserToken()
         {
-            this.Buffer = new List<byte>();
+            _buffer = new ConcurrentQueue<byte[]>();
+        }
+
+        public void AddBuffer(byte[] data)
+        {
+            if (data == null) return;
+            _buffer.Enqueue(data);
         }
     }
 }
